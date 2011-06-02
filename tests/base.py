@@ -1,13 +1,10 @@
 import unittest
 import sys
-sys.path.append('./lib')
+sys.path.append('./')
 
-import silme.format.l20n.ast.base as ast
+import pyast as ast
 
 class BaseASTTestCase(unittest.TestCase):
-    def setUp(self):
-        ast.DEBUG = True
-
     def test_basic_init(self):
         class Example(ast.Node):
             field = ast.field(str, null=True)

@@ -8,6 +8,6 @@ setup(name='pyast',
       author='Zbigniew Braniecki',
       author_email='zbigniew@braniecki.net',
       url='https://github.com/zbraniecki/pyast',
-      packages=['ast', ],
+      packages=['pyast', ],
      )
 
