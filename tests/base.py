@@ -4,6 +4,7 @@ sys.path.append('./')
 
 import pyast as ast
 
+
 class BaseASTTestCase(unittest.TestCase):
     def test_basic_init(self):
         class Example(ast.Node):
@@ -11,19 +12,19 @@ class BaseASTTestCase(unittest.TestCase):
             seq = ast.seq((str, int), null=True)
         
         e = Example()
-        self.assertIsInstance(e, Example)
+        self.assertEqual(type(e), Example)
         self.assertEqual(e.field, None)
         self.assertEqual(len(e.seq), 0)
 
         e = Example(field="foo")
-        self.assertIsInstance(e, Example)
+        self.assertEqual(type(e), Example)
         self.assertEqual(e.field, "foo")
         self.assertEqual(len(e.seq), 0)
 
         self.assertRaises(TypeError, Example, {'field':2})
 
         e = Example(seq=('a', 2))
-        self.assertIsInstance(e, Example)
+        self.assertEqual(type(e), Example)
         self.assertEqual(e.field, None)
         self.assertEqual(len(e.seq), 2)
         self.assertEqual(e.seq[0], 'a')
@@ -31,7 +32,7 @@ class BaseASTTestCase(unittest.TestCase):
 
         e = Example(seq=('a', 2), field="foo")
         e2 = Example(field="foo", seq=('a', 2))
-        self.assertIsInstance(e, Example)
+        self.assertEqual(type(e), Example)
         self.assertEqual(len(e.seq), len(e2.seq))
         self.assertEqual(e.seq[0], e2.seq[0])
         self.assertEqual(e.seq[1], e2.seq[1])

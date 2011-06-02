@@ -7,6 +7,8 @@
 ####
 DEBUG = True
 
+basestring = str
+
 class basefield(object):
     """Base abstract class for AST field pseudoclasses
 
@@ -35,7 +37,7 @@ class basefield(object):
     _counter = 0
     def __new__(cls, types, null=False, default=None):
         basefield._counter += 1
-        if not hasattr(types, '__iter__'):
+        if types.__class__ in (type, str):
             types = (types,)
         return {'types': types,
                 'guard_type': 'str' if isinstance(types[0], basestring) else 'class',
@@ -205,7 +207,7 @@ class NodeBase(type):
             return
         guards = {}
         for k,v in attrs.items():
-            if k.startswith('_') or callable(v):
+            if k.startswith('_') or hasattr(v, '__call__'):
                 continue
             if not issubclass(v['field_cls'], basefield):
                 raise TypeError('Field type must be a subclass of basefield')
