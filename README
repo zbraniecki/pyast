@@ -1,0 +1,57 @@
+PyAST is a library that allows for creating AST structures using declarative programming form.
+
+example:
+
+== jsast.py ==
+
+import pyast as ast
+
+class Node(ast.Node):
+    pass
+
+class Statement(Node):
+    pass
+
+class Expression(Pattern):
+    pass
+
+class Operator(Node):
+    token = ast.field(("+","=","-","==","!=",">",">"))
+
+class Identifier(Expression):
+    name = ast.field((str, unicode))
+
+class Literal(Expression):
+    value = ast.field((str, bool, int, NoneType))
+
+class Program(ast.Node):
+    body = ast.seq(Statement, null=True)
+
+class ExpressionStatement(Statement):
+    expression = ast.field(Expression)
+
+class AssignmentExpression(Expression):
+    operator = ast.field(Operator)
+    left = ast.field(Expression)
+    right = ast.field(Expression)
+
+== main.py ==
+
+from jsast import *
+
+prog = Program()
+prog.body.append(
+    ExpressionStatement(
+        AssignmentExpression(
+            Operator("="),
+            Identifier("x"),
+            Literal(2)
+        )))
+
+# result: x=2;
+=========
+
+pyast.DEBUG variable defines if pyast operates in DEBUG mode in which the 
+strong typing is enforced at cost of performance, or optimized mode when all
+the checks are inactive.
+
