@@ -1,3 +1,5 @@
+import sys
+
 ####
 #
 # The debug mode allows user to enforce type checks in AST based classes
@@ -7,6 +9,7 @@
 ####
 DEBUG = True
 
+# Temporary solution for string/unicode in py2 vs py3
 basestring = str
 
 class basefield(object):
@@ -219,7 +222,13 @@ class NodeBase(type):
         setattr(cls, '_fields', fields)
         setattr(cls, '_guards', guards)
 
-class Node(object):
+# Temporary solution for metaclass in py2 vs py3
+if sys.version >= '3':
+    TempNode = NodeBase("NodeBase", (object,), {})
+else:
+    TempNode = object
+
+class Node(TempNode):
     """Basic AST Node
 
     Any Node should subclass from this one
