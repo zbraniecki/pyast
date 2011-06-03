@@ -10,7 +10,8 @@ import sys
 DEBUG = True
 
 # Temporary solution for string/unicode in py2 vs py3
-basestring = str
+if sys.version >= '3':
+    basestring = str
 
 class basefield(object):
     """Base abstract class for AST field pseudoclasses
@@ -40,7 +41,7 @@ class basefield(object):
     _counter = 0
     def __new__(cls, types, null=False, default=None):
         basefield._counter += 1
-        if types.__class__ in (type, str):
+        if isinstance(types, (type, basestring)):
             types = (types,)
         return {'types': types,
                 'guard_type': 'str' if isinstance(types[0], basestring) else 'class',
@@ -208,7 +209,11 @@ class NodeBase(type):
         parents = [b for b in bases if isinstance(b, NodeBase)]
         if not parents:
             return
+
         guards = {}
+        if hasattr(cls, '_guards'):
+            for k,v in cls._guards.items():
+                guards[k] = v
         for k,v in attrs.items():
             if k.startswith('_') or hasattr(v, '__call__'):
                 continue
@@ -219,8 +224,8 @@ class NodeBase(type):
             guards[k] = v
         fields = [i[0] for i in sorted(guards.items(),
                                        key=lambda x: x[1]['_counter'])]
-        setattr(cls, '_fields', fields)
-        setattr(cls, '_guards', guards)
+        cls._guards = guards
+        cls._fields = fields
 
 # Temporary solution for metaclass in py2 vs py3
 if sys.version >= '3':
@@ -239,7 +244,6 @@ class Node(TempNode):
         guards = self.__class__._guards
         attrs = self.__class__._fields
         args = list(args)
-
         for name in attrs:
             val = None
             if name in kwargs:
