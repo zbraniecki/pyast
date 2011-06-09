@@ -1,14 +1,5 @@
 import sys
 
-####
-#
-# The debug mode allows user to enforce type checks in AST based classes
-# 
-# The cost is ~2x slower performance on operations around AST classes.
-#
-####
-DEBUG = True
-
 # Temporary solution for string/unicode in py2 vs py3
 if sys.version >= '3':
     basestring = str
@@ -39,21 +30,24 @@ class basefield(object):
         ast.field(("+","-","="))
     """
     _counter = 0
+
     def __new__(cls, types, null=False, default=None):
         basefield._counter += 1
         if isinstance(types, (type, basestring)):
             types = (types,)
         return {'types': types,
-                'guard_type': 'str' if isinstance(types[0], basestring) else 'class',
+                'guard_type': 'str' if isinstance(types[0],
+                                                  basestring) else 'class',
                 'field_cls': cls,
                 'null': null,
-                'default': default,
+                'default': [] if (default is None and
+                                       issubclass(cls, seq)) else default,
                 '_counter': basefield._counter}
 
 
 class field(basefield):
     """Single Node field
- 
+
     example:
 
     class Foo(ast.Node)
@@ -62,15 +56,10 @@ class field(basefield):
         computed = ast.field(bool, default=True)
 
     """
-    if DEBUG:
-        @classmethod
-        def init(cls, name, val, guard):
-            cls._validate_set(name, val, guard)
-            return val
-    else:
-        @classmethod
-        def init(cls, name, val, guard):
-            return val
+    @classmethod
+    def init(cls, name, val, guard):
+        cls._validate_set(name, val, guard)
+        return val
 
     @classmethod
     def _validate_set(self, name, val, guard):
@@ -88,6 +77,7 @@ class field(basefield):
         raise TypeError('Element %s must be one of %r' %
                         (name, ','.join(map(str, guard['types']))))
 
+
 class seq(basefield):
     """Node field sequence
 
@@ -100,17 +90,11 @@ class seq(basefield):
 
 
     """
-    if DEBUG:
-        @classmethod
-        def init(cls, name, val, guard):
-            val = TypedList(val,
-                            guard['types'],
-                            null=guard['null'])
-            return val
-    else:
-        @classmethod
-        def init(cls, name, val, guard):
-            return list(val) if val else []
+    @classmethod
+    def init(cls, name, val, guard):
+        return TypedList(val,
+                         guard['types'],
+                         null=guard['null'])
 
     @classmethod
     def _validate_set(cls, name, val, guard):
@@ -121,6 +105,7 @@ class seq(basefield):
                 raise TypeError('Element must be one of %r' % guard['types'])
         else:
             raise TypeError('Element must be a sequence')
+
 
 class TypedList(list):
     """Strongly types list
@@ -141,7 +126,7 @@ class TypedList(list):
         TypedList([], Expression, null=True)
         ast.field(["+","-","+"], ("+","-","="))
     """
-    _type = 'class' # class | str
+    _type = 'class'  # class | str
 
     def __init__(self, init, types, null=False):
         super(TypedList, self).__init__()
@@ -179,12 +164,12 @@ class TypedList(list):
     set = extend
 
     def pop(self):
-        if self._null is False and len(self)==1:
+        if self._null is False and len(self) == 1:
             raise TypeError("This list must not be empty")
         return super(TypedList, self).pop()
 
     def __delitem__(self, key):
-        if self._null is False and len(self)==1:
+        if self._null is False and len(self) == 1:
             raise TypeError("This list must not be empty")
         list.__delitem__(self, key)
 
@@ -197,9 +182,10 @@ class TypedList(list):
         list.__setslice__(self, i, j, sequence)
 
     def __delslice__(self, i, j):
-        if self._null is False and len(self)<=j-i:
+        if self._null is False and len(self) <= j - i:
             raise TypeError("This list must not be empty")
         list.__delslice__(self, i, j)
+
 
 class NodeBase(type):
     """ Metaclass for AST Nodes
@@ -212,9 +198,9 @@ class NodeBase(type):
 
         guards = {}
         if hasattr(cls, '_guards'):
-            for k,v in cls._guards.items():
+            for k, v in cls._guards.items():
                 guards[k] = v
-        for k,v in attrs.items():
+        for k, v in attrs.items():
             if k.startswith('_') or hasattr(v, '__call__'):
                 continue
             if not issubclass(v['field_cls'], basefield):
@@ -233,6 +219,7 @@ if sys.version >= '3':
 else:
     TempNode = object
 
+### Consider DebugNode and OptNode and switch which one is used
 class Node(TempNode):
     """Basic AST Node
 
@@ -240,34 +227,42 @@ class Node(TempNode):
     """
     __metaclass__ = NodeBase
 
+    ####
+    #
+    # The debug mode allows user to enforce type checks in AST based classes
+    #
+    # The cost is ~2x slower performance on operations around AST classes.
+    #
+    ####
+    _debug = True
+
     def __init__(self, *args, **kwargs):
-        guards = self.__class__._guards
-        attrs = self.__class__._fields
-        args = list(args)
-        for name in attrs:
-            val = None
+        args = iter(args)
+        for name in self._fields:
             if name in kwargs:
                 val = kwargs.pop(name)
             else:
                 try:
-                    val = args.pop(0)
-                except IndexError:
-                    val = guards[name]['default']
-            val = guards[name]['field_cls'].init(name, val, guards[name])
+                    val = next(args)
+                except StopIteration:
+                    val = self._guards[name]['default']
+            if self._debug:
+                guards = self._guards
+                val = guards[name]['field_cls'].init(name,
+                                                     val,
+                                                     guards[name])
+                setattr(Node, '__setattr__', self.__debug__setattr__)
+                setattr(Node, '__delattr__', self.__debug__delattr__)
             object.__setattr__(self, name, val)
+ 
+    def __debug__setattr__(self, name, val):
+        if name in self._fields:
+            val = self._guards[name]['field_cls'].init(name,
+                                                      val,
+                                                      self._guards[name])
+        object.__setattr__(self, name, val)
 
-    if DEBUG:
-        def __setattr__(self, name, val):
-            if name in self._fields:
-                val = self._guards[name]['field_cls'].init(name,
-                                                          val,
-                                                          self._guards[name])
-            object.__setattr__(self, name, val)
-
-
-        def __delattr__(self, name):
-            if name in self._fields:
-                raise Exception("Cannot remove Node's fields")
-            object.__delattr__(self, name)
-
-
+    def __debug__delattr__(self, name):
+        if name in self._fields:
+            raise Exception("Cannot remove Node's fields")
+        object.__delattr__(self, name)
