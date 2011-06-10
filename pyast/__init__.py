@@ -237,23 +237,28 @@ class Node(TempNode):
     _debug = True
 
     def __init__(self, *args, **kwargs):
-        args = iter(args)
+        key = 0
         for name in self._fields:
             if name in kwargs:
                 val = kwargs.pop(name)
             else:
                 try:
-                    val = next(args)
-                except StopIteration:
+                    val = args[key]
+                    key+=1
+                except IndexError:
                     val = self._guards[name]['default']
+                    if hasattr(val, '__iter__'):
+                        val = val[:]
             if self._debug:
                 guards = self._guards
                 val = guards[name]['field_cls'].init(name,
                                                      val,
                                                      guards[name])
-                setattr(Node, '__setattr__', self.__debug__setattr__)
                 setattr(Node, '__delattr__', self.__debug__delattr__)
-            object.__setattr__(self, name, val)
+                setattr(Node, '__setattr__', self.__debug__setattr__)
+                object.__setattr__(self, name, val)
+            else:
+                setattr(self, name, val)
  
     def __debug__setattr__(self, name, val):
         if name in self._fields:
