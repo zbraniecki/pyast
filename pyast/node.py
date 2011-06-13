@@ -1,6 +1,7 @@
 import sys
 from .field import basefield
 
+
 class NodeBase(type):
     """ Metaclass for AST Nodes
     Verifies the syntax of the declarative field syntax
@@ -32,6 +33,7 @@ if sys.version >= '3':
 else:
     TempNode = object
 
+
 ### Consider DebugNode and OptNode and switch which one is used
 class Node(TempNode):
     """Basic AST Node
@@ -59,7 +61,7 @@ class Node(TempNode):
             else:
                 try:
                     val = args[key]
-                    key+=1
+                    key += 1
                 except IndexError:
                     val = self._guards[name]['default']
                     if hasattr(val, '__iter__'):
@@ -74,7 +76,7 @@ class Node(TempNode):
                 object.__setattr__(self, name, val)
             else:
                 setattr(self, name, val)
- 
+
     def __debug__setattr__(self, name, val):
         if name in self._fields:
             val = self._guards[name]['field_cls'].init(name,

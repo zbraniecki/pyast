@@ -5,6 +5,7 @@ from .typedlist import TypedList
 if sys.version >= '3':
     basestring = str
 
+
 class basefield(object):
     """Base abstract class for AST field pseudoclasses
 
@@ -106,4 +107,3 @@ class seq(basefield):
                 raise TypeError('Element must be one of %r' % guard['types'])
         else:
             raise TypeError('Element must be a sequence')
-

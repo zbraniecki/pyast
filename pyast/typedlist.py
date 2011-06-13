@@ -4,6 +4,7 @@ import sys
 if sys.version >= '3':
     basestring = str
 
+
 class TypedList(list):
     """Strongly types list
 
