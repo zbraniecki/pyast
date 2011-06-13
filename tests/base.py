@@ -8,6 +8,7 @@ import pyast as ast
 class BaseASTTestCase(unittest.TestCase):
     def test_basic_init(self):
         class Example(ast.Node):
+            _debug = True
             field = ast.field(str, null=True)
             seq = ast.seq((str, int), null=True)
         
@@ -40,6 +41,7 @@ class BaseASTTestCase(unittest.TestCase):
 
     def test_not_null(self):
         class Example(ast.Node):
+            _debug = True
             field = ast.field(str, null=False)
             seq= ast.seq((str, int), null=False)
 
@@ -56,6 +58,7 @@ class BaseASTTestCase(unittest.TestCase):
 
     def test_field(self):
         class Example(ast.Node):
+            _debug = True
             field = ast.field(str, null=True)
         e = Example()
         self.assertRaises(TypeError, Example, {'field': 2})
@@ -76,6 +79,7 @@ class BaseASTTestCase(unittest.TestCase):
         e = Example(None)
 
         class Example(ast.Node):
+            _debug = True
             field = ast.field(str, null=False)
 
         self.assertRaises(TypeError, Example, {})
@@ -96,6 +100,7 @@ class BaseASTTestCase(unittest.TestCase):
 
     def test_seq(self):
         class Example(ast.Node):
+            _debug = True
             seq = ast.seq(str, null=True)
 
         e = Example()
