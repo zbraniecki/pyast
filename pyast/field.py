@@ -1,10 +1,14 @@
 import sys
+import re as regexp
 from .typedlist import TypedList
 
 # Temporary solution for string/unicode in py2 vs py3
 if sys.version >= '3':
     basestring = str
 
+
+def re(s):
+    return regexp.compile(s)
 
 class basefield(object):
     """Base abstract class for AST field pseudoclasses
@@ -33,13 +37,23 @@ class basefield(object):
     """
     _counter = 0
 
+    _guard_types = {
+        'str': lambda x: isinstance(x, basestring),
+        'class': lambda x: isinstance(x, type),
+        'pattern': lambda x: isinstance(x, regexp._pattern_type),
+    }
+
     def __new__(cls, types, null=False, default=None):
         basefield._counter += 1
-        if isinstance(types, (type, basestring)):
+        if isinstance(types, (type, basestring, regexp._pattern_type)):
             types = (types,)
+        guard_type = None
+        for k,v in cls._guard_types.items():
+            if v(types[0]):
+                guard_type = k
+                break
         return {'types': types,
-                'guard_type': 'str' if isinstance(types[0],
-                                                  basestring) else 'class',
+                'guard_type': guard_type,
                 'field_cls': cls,
                 'null': null,
                 'default': [] if (default is None and
@@ -70,9 +84,13 @@ class field(basefield):
                 raise TypeError('Element %s must not be empty' % name)
             return
         else:
-            if guard['guard_type'] is 'str':
+            if guard['guard_type'] == 'str':
                 if val in guard['types']:
                     return
+            elif guard['guard_type'] == 'pattern':
+                for guard in guard['types']:
+                    if guard.match(val):
+                        return
             else:
                 if isinstance(val, guard['types']):
                     return

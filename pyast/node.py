@@ -1,6 +1,6 @@
 import sys
+import re
 from .field import basefield
-
 
 class NodeBase(type):
     """ Metaclass for AST Nodes
@@ -16,7 +16,9 @@ class NodeBase(type):
                 continue
             if not issubclass(v['field_cls'], basefield):
                 raise TypeError('Field type must be a subclass of basefield')
-            if not all(isinstance(i, (type, str)) for i in v['types']):
+            if not all(isinstance(i, (type,
+                                      str,
+                                      re._pattern_type)) for i in v['types']):
                 raise TypeError('Field types must be python types or strings')
             guards[k] = v
         fields = [i[0] for i in sorted(guards.items(),

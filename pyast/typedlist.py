@@ -1,4 +1,5 @@
 import sys
+import re
 
 # Temporary solution for string/unicode in py2 vs py3
 if sys.version >= '3':
@@ -24,7 +25,7 @@ class TypedList(list):
         TypedList([], Expression, null=True)
         ast.field(["+","-","+"], ("+","-","="))
     """
-    _type = 'class'  # class | str
+    _type = 'class'  # class | str | pattern
 
     def __init__(self, types, init=None, null=False):
         super(TypedList, self).__init__()
@@ -32,6 +33,8 @@ class TypedList(list):
         self._null = null
         if isinstance(types[0], basestring):
             self.__enforceType = self.__enforceTypeStr
+        elif isinstance(types[0], re._pattern_type):
+            self.__enforceType = self.__enforceTypePattern
         else:
             self.__enforceType = self.__enforceTypeClass
         if init:
@@ -43,13 +46,19 @@ class TypedList(list):
         if all(i in self._types for i in items):
             return
         raise TypeError('This list accepts only strings of value: %s' %
-                        ','.join(self._types))
+                        ', '.join(self._types))
 
     def __enforceTypeClass(self, items):
         if all(isinstance(i, self._types) for i in items):
             return
         raise TypeError('This list accepts only elements of types: %s' %
-                        ','.join([str(i.__name__) for i in self._types]))
+                        ', '.join([str(i.__name__) for i in self._types]))
+
+    def __enforceTypePattern(self, items):
+        if all(j.match(i) for j in self._types for i in items):
+            return
+        raise TypeError('This list accepts only elements that match: %s' %
+                        ', '.join([i.pattern for i in self._types]))
 
     def append(self, item):
         self.__enforceType((item,))

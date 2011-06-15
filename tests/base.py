@@ -173,6 +173,18 @@ class BaseASTTestCase(unittest.TestCase):
         self.assertEqual(len(e.seq), 1)
         self.assertRaises(TypeError, e.seq.__delslice__, 0, 1)
 
+    def test_pattern(self):
+        class Example(ast.Node):
+            _debug = True
+            seq = ast.seq(ast.re("[a-z]{2}"))
+
+        e = Example(['ab','ba'])
+        self.assertEqual(len(e.seq), 2)
+        self.assertEqual(e.seq[0], 'ab')
+        self.assertEqual(e.seq[1], 'ba')
+
+        self.assertRaises(TypeError, Example, "0a")
+
 if __name__ == '__main__':
     unittest.main()
 
