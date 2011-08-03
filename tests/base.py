@@ -185,6 +185,21 @@ class BaseASTTestCase(unittest.TestCase):
 
         self.assertRaises(TypeError, Example, "0a")
 
+    def test_basic_inheritance(self):
+        class Example(ast.Node):
+            _debug = True
+            field = ast.field(str, null=True)
+      
+        class Example4(ast.Node):
+            field2 = ast.field(str)
+
+        class Example2(Example, Example4):
+            pass
+
+        e = Example2(field="test", field2="dd")
+        self.assertEqual(type(e), Example2)
+        self.assertEqual(e.field, "test")
+
 if __name__ == '__main__':
     unittest.main()
 

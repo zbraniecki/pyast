@@ -10,7 +10,10 @@ class NodeBase(type):
         parents = [b for b in bases if isinstance(b, NodeBase)]
         if not parents:
             return type.__new__(cls, name, bases, attrs)
-        guards = cls._guards[:] if hasattr(cls, '_guards') else {}
+        guards = {}
+        for base in bases:
+            if isinstance(base, NodeBase) and hasattr(base, '_guards'):
+                guards.update(base._guards)
         for k, v in attrs.items():
             if k.startswith('_') or hasattr(v, '__call__'):
                 continue
@@ -75,9 +78,9 @@ class Node(TempNode):
                                                      guards[name])
                 setattr(Node, '__delattr__', self.__debug__delattr__)
                 setattr(Node, '__setattr__', self.__debug__setattr__)
-                object.__setattr__(self, name, val)
+                self.__debug__setattr__(name, val)
             else:
-                setattr(self, name, val)
+                object.__setattr__(self, name, val)
 
     def __debug__setattr__(self, name, val):
         if name in self._fields:
