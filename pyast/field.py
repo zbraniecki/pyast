@@ -112,9 +112,14 @@ class seq(basefield):
     """
     @classmethod
     def init(cls, name, val, guard):
-        return TypedList(guard['types'],
-                         val,
-                         null=guard['null'])
+        try:
+            return TypedList(guard['types'],
+                             val,
+                             null=guard['null'])
+        except TypeError as e:
+            raise TypeError('Error in field "%s":\n %s' % (
+                name,
+                dir(e)))
 
     @classmethod
     def _validate_set(cls, name, val, guard):
