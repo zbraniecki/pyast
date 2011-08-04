@@ -119,7 +119,7 @@ class seq(basefield):
         except TypeError as e:
             raise TypeError('Error in field "%s":\n %s' % (
                 name,
-                dir(e)))
+                str(e)))
 
     @classmethod
     def _validate_set(cls, name, val, guard):
