@@ -76,8 +76,8 @@ class Node(TempNode):
                 val = guards[name]['field_cls'].init(name,
                                                      val,
                                                      guards[name])
-                setattr(Node, '__delattr__', self.__debug__delattr__)
-                setattr(Node, '__setattr__', self.__debug__setattr__)
+                setattr(self.__class__, '__delattr__', self.__debug__delattr__)
+                setattr(self.__class__, '__setattr__', self.__debug__setattr__)
                 self.__debug__setattr__(name, val)
             else:
                 object.__setattr__(self, name, val)

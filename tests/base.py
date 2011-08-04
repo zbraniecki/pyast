@@ -200,6 +200,28 @@ class BaseASTTestCase(unittest.TestCase):
         self.assertEqual(type(e), Example2)
         self.assertEqual(e.field, "test")
 
+    def test_basic_twomodes(self):
+        class Example(ast.Node):
+            _debug = True
+            field = ast.field(str, null=True)
+      
+        class Example2(ast.Node):
+            _debug = False
+            field = ast.field(str)
+
+        class Example3(ast.Node):
+            _debug = True
+            field = ast.field(str)
+
+        self.assertRaises(TypeError, Example, 2)
+        self.assertEqual(Example2(2).field, 2)
+        self.assertRaises(TypeError, Example3, 2)
+
+        x = Example2()
+        x._foo = 'x'
+        self.assertEqual(x._foo, 'x')
+
 if __name__ == '__main__':
     unittest.main()
+
 
