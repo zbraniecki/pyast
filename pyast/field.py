@@ -6,9 +6,10 @@ from .typedlist import TypedList
 if sys.version >= '3':
     basestring = str
 
-
+# we redefine to make pyast.re() a proper field
 def re(s):
     return regexp.compile(s)
+
 
 class basefield(object):
     """Base abstract class for AST field pseudoclasses
@@ -88,14 +89,20 @@ class field(basefield):
                 if val in guard['types']:
                     return
             elif guard['guard_type'] == 'pattern':
-                for guard in guard['types']:
-                    if guard.match(val):
+                for guardt in guard['types']:
+                    if guardt.match(val):
                         return
             else:
                 if isinstance(val, guard['types']):
                     return
+        allowed = []
+        for i in guard['types']:
+            if isinstance(i, regexp._pattern_type):
+                allowed.append(i.pattern)
+            else:
+                allowed.append(str(i))
         raise TypeError('Element %s must be one of %r' %
-                        (name, ','.join(map(str, guard['types']))))
+                        (name, ','.join(allowed)))
 
 
 class seq(basefield):
