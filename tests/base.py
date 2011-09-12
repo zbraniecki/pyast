@@ -1,6 +1,4 @@
 import unittest
-import sys
-sys.path.append('./')
 
 import pyast as ast
 
@@ -220,6 +218,58 @@ class BaseASTTestCase(unittest.TestCase):
         x = Example2()
         x._foo = 'x'
         self.assertEqual(x._foo, 'x')
+
+    def test_basic_init_template(self):
+        class Example(ast.Node):
+            _debug = True
+            key = ast.field(str, null=True)
+            value = ast.field((str, int), null=True)
+
+        e = Example(key='key', value='s')
+        e._template = '<%(key)s %(value)s>'
+        x = str(e)
+        self.assertEqual(x, '<key s>')
+
+    def test_basic_seq_template(self):
+
+        class Literal(ast.Node):
+            content = ast.field(str)
+            _template = '%(content)s'
+        
+        class Example(ast.Node):
+            _debug = True
+            key = ast.field(Literal, null=True)
+            value = ast.seq(Literal, null=True, delimiter=', ')
+
+        e = Example(key=Literal('key'), value=[Literal('a'), Literal('b')])
+        e._template = '<%(key)s [%(value)s]>'
+        x = str(e)
+        self.assertEqual(x, '<key [a, b]>')
+
+    def test_basic_seq_custom_template(self):
+
+        class Literal(ast.Node):
+            content = ast.field(str)
+            _template = '%(content)s'
+        
+        class Example(ast.Node):
+            _debug = True
+            key = ast.field(Literal, null=True)
+            value = ast.seq(Literal, null=True, delimiter=', ')
+
+        key = Literal('key')
+        key._template = ' %(content)s  '
+
+        a = Literal('a')
+        a._template = ' %(content)s  '
+        b = Literal('b')
+        b._template = '  %(content)s '
+        value = [a,b]
+
+        e = Example(key=key, value=value)
+        e._template = '<%(key)s [%(value)s]>'
+        x = str(e)
+        self.assertEqual(x, '< key   [ a  ,   b ]>')
 
 if __name__ == '__main__':
     unittest.main()

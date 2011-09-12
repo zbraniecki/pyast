@@ -61,7 +61,6 @@ class basefield(object):
                                        issubclass(cls, seq)) else default,
                 '_counter': basefield._counter}
 
-
 class field(basefield):
     """Single Node field
 
@@ -117,6 +116,12 @@ class seq(basefield):
 
 
     """
+
+    def __new__(cls, types, null=False, default=None, delimiter=','):
+        guard = basefield.__new__(cls, types, null=null, default=default)
+        guard['delimiter'] = delimiter
+        return guard
+
     @classmethod
     def init(cls, name, val, guard):
         try:
@@ -137,3 +142,4 @@ class seq(basefield):
                 raise TypeError('Element must be one of %r' % guard['types'])
         else:
             raise TypeError('Element must be a sequence')
+

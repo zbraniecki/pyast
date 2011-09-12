@@ -82,6 +82,28 @@ class Node(TempNode):
             else:
                 object.__setattr__(self, name, val)
 
+    def __getitem__(self, key):
+        if hasattr(self, key):
+            return getattr(self, key)
+        raise KeyError(key)
+
+    def __repr__(self):
+        if hasattr(self, '_template'):
+            fields = {}
+            for i in self._fields:
+                field = getattr(self, i)
+                if isinstance(field, list):
+                    fields[i] = self._guards[i]['delimiter'].join(map(str, field))
+                else:
+                    if field is None:
+                        fields[i] = ''
+                    else:
+                        fields[i] = str(field)
+            return self._template % fields
+        if len(self._fields) == 1:
+            return str(getattr(self, self._fields[0]))
+        return object.__repr__(self)
+
     def __debug__setattr__(self, name, val):
         if name in self._fields:
             val = self._guards[name]['field_cls'].init(name,
