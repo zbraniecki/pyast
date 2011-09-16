@@ -1,5 +1,8 @@
 import sys
 import re
+from itertools import izip_longest as zip_longest
+from itertools import chain
+
 from .field import basefield
 
 class NodeBase(type):
@@ -93,7 +96,15 @@ class Node(TempNode):
             for i in self._fields:
                 field = getattr(self, i)
                 if isinstance(field, list):
-                    fields[i] = self._guards[i]['delimiter'].join(map(str, field))
+                    if hasattr(self, '_template_%s' % i):
+                        list_template = getattr(self, '_template_%s' % i)
+                        fields[i] = ''.join(['%s%s' % x for x in zip_longest(
+                                                        map(str, field),
+                                                        list_template,
+                                                        fillvalue=''
+                                                        )])
+                    else:
+                        fields[i] = ', '.join(map(str, field))
                 else:
                     if field is None:
                         fields[i] = ''

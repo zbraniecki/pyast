@@ -117,11 +117,6 @@ class seq(basefield):
 
     """
 
-    def __new__(cls, types, null=False, default=None, delimiter=','):
-        guard = basefield.__new__(cls, types, null=null, default=default)
-        guard['delimiter'] = delimiter
-        return guard
-
     @classmethod
     def init(cls, name, val, guard):
         try:
