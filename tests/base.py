@@ -239,7 +239,7 @@ class BaseASTTestCase(unittest.TestCase):
         class Example(ast.Node):
             _debug = True
             key = ast.field(Literal, null=True)
-            value = ast.seq(Literal, null=True, delimiter=', ')
+            value = ast.seq(Literal, null=True)
 
         e = Example(key=Literal('key'), value=[Literal('a'), Literal('b')])
         e._template = '<%(key)s [%(value)s]>'
@@ -255,19 +255,17 @@ class BaseASTTestCase(unittest.TestCase):
         class Example(ast.Node):
             _debug = True
             key = ast.field(Literal, null=True)
-            value = ast.seq(Literal, null=True, delimiter=', ')
+            value = ast.seq(Literal, null=True)
 
         key = Literal('key')
-        key._template = ' %(content)s  '
 
         a = Literal('a')
-        a._template = ' %(content)s  '
         b = Literal('b')
-        b._template = '  %(content)s '
         value = [a,b]
 
         e = Example(key=key, value=value)
-        e._template = '<%(key)s [%(value)s]>'
+        e._template = '< %(key)s   [ %(value)s ]>'
+        e._template_value = ['  ,   ']
         x = str(e)
         self.assertEqual(x, '< key   [ a  ,   b ]>')
 
