@@ -1,7 +1,6 @@
 import sys
 import re
 from itertools import izip_longest as zip_longest
-from itertools import chain
 
 from .field import basefield
 
@@ -99,20 +98,23 @@ class Node(TempNode):
                     if hasattr(self, '_template_%s' % i):
                         list_template = getattr(self, '_template_%s' % i)
                         fields[i] = ''.join(['%s%s' % x for x in zip_longest(
-                                                        map(str, field),
+                                                        map(unicode, field),
                                                         list_template,
                                                         fillvalue=''
                                                         )])
                     else:
-                        fields[i] = ', '.join(map(str, field))
+                        fields[i] = ', '.join(map(unicode, field))
                 else:
                     if field is None:
                         fields[i] = ''
                     else:
-                        fields[i] = str(field)
+                        fields[i] = unicode(field)
             return self._template % fields
+        if hasattr(self, '_serializer'):
+            serializer = getattr(self, '_serializer')
+            return serializer.dump(self)
         if len(self._fields) == 1:
-            return str(getattr(self, self._fields[0]))
+            return unicode(getattr(self, self._fields[0]))
         return object.__repr__(self)
 
     def __debug__setattr__(self, name, val):
@@ -120,6 +122,10 @@ class Node(TempNode):
             val = self._guards[name]['field_cls'].init(name,
                                                       val,
                                                       self._guards[name])
+        # there's a bug here when setattr is called on an object with an 
+        # attribute
+        # that has been previously defined.
+        # See l20n's js compiler and macro idrefs substitution
         object.__setattr__(self, name, val)
 
     def __debug__delattr__(self, name):
