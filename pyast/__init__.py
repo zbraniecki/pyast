@@ -1,22 +1,26 @@
 from .field import field, seq, re
 from .node import Node
 
-def _dump_node(node, indent=0):
+def _dump_node(node, name=None, indent=0):
     tree = []
-    tree.append((indent, "[%s]" % node.__class__.__name__))
+    if isinstance(node, str):
+        cl = "%s=\"%s\"" % (node.__class__.__name__, node)
+    else:
+        cl = node.__class__.__name__
+    tree.append((indent, "%s[%s]" % (".%s" % name if name else "", cl)))
     indent += 2
     if isinstance(node, str):
-        tree.append((indent, '"%s"' % node))
+        #tree.append((indent, '"%s"' % node))
         return tree
     elif node is None:
-        return
+        return []
     for i in node._fields:
-        tree.append((indent, ".%s" % i))
         field = getattr(node, i)
         if isinstance(field, list):
+            tree.append((indent, ".%s" % i))
             tree.extend(_dump_list(field, indent=indent+2))
         else:
-            tree.extend(_dump_node(field, indent=indent+2))
+            tree.extend(_dump_node(field, name=i, indent=indent))
     return tree
 
 def _dump_list(tList, indent=0):
