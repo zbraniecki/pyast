@@ -5,12 +5,16 @@ def _dump_node(node, name=None, indent=0):
     tree = []
     if isinstance(node, str):
         cl = "%s=\"%s\"" % (node.__class__.__name__, node)
+    elif isinstance(node, bool):
+        cl = "%s=%s" % (node.__class__.__name__, node)
     else:
         cl = node.__class__.__name__
     tree.append((indent, "%s[%s]" % (".%s" % name if name else "", cl)))
     indent += 2
     if isinstance(node, str):
         #tree.append((indent, '"%s"' % node))
+        return tree
+    if isinstance(node, bool):
         return tree
     elif node is None:
         return []
