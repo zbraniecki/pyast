@@ -1,6 +1,5 @@
 import sys
 import re
-import types
 
 if sys.version >= '3':
     from itertools import zip_longest
@@ -60,13 +59,24 @@ def stringify(node):
 def gettemplate(node, name=None):
     template = None
     name = "_template_%s" % name if name else "_template"
-    if hasattr(node, name):
-        template = getattr(node, name)
-    if hasattr(template, '__call__'):
-        template = template()
-    elif hasattr(node, '_%s' % name):
-        template = getattr(node, '_%s' % name)
+    obj = node
+    if hasattr(obj, name):
+        template = getattr(obj, name)
+        if hasattr(template, '__call__'):
+            template = template()
+    elif hasattr(obj, '_%s' % name):
+        template = getattr(obj, '_%s' % name)
+        if hasattr(template, '__call__'):
+            template = template()
     return template
+
+def getfillvalue(node, name=None, default=False):
+    fv = ''
+    name = "_template_%s_fillvalue" % name if name else "_template_fillvalue"
+    obj = node.__class__ if default else node
+    if hasattr(obj, name):
+        fv = getattr(obj, name)
+    return fv
 
 class Node(TempNode):
     """Basic AST Node
@@ -116,18 +126,19 @@ class Node(TempNode):
         raise KeyError(key)
 
     def __repr__(self, serializer=None):
-        print('beg repr on %s' % type(self))
         template = gettemplate(self)
         if template:
             fields = {}
             for i in self._fields:
                 field = getattr(self, i)
                 if isinstance(field, list):
-                    if hasattr(self, '_template_%s' % i):
-                        list_template = getattr(self, '_template_%s' % i)
+                    list_template = gettemplate(self, i)
+                    if list_template:
+                        if len(field) >= len(list_template):
+                            list_template += [getfillvalue(self, i)] * (len(field)-len(list_template)+1)
                         fields[i] = ''.join(['%s%s' % x for x in zip_longest(
-                                                        map(stringify, field),
                                                         list_template,
+                                                        map(stringify, field),
                                                         fillvalue=''
                                                         )])
                     else:
@@ -137,13 +148,9 @@ class Node(TempNode):
                         fields[i] = ''
                     else:
                         fields[i] = stringify(field)
-            print('end repr on %s' % type(self))
             return template % fields
-        #if serializer:
-        #    return serializer.dump(self)
         #if len(self._fields) == 1:
         #    return getattr(self, self._fields[0]).__repr__()
-        print('end repr on %s' % type(self))
         return object.__repr__(self)
 
     def __debug__setattr__(self, name, val):
