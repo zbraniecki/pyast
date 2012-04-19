@@ -1,6 +1,13 @@
 import sys
 import re
-from itertools import izip_longest as zip_longest
+import types
+
+if sys.version >= '3':
+    from itertools import zip_longest
+    string = str
+else:
+    from itertools import izip_longest as zip_longest
+    string = basestring
 
 from .field import basefield
 
@@ -17,9 +24,13 @@ class NodeBase(type):
             if isinstance(base, NodeBase) and hasattr(base, '_guards'):
                 guards.update(base._guards)
         for k, v in attrs.items():
+            if k == '_template':
+                if not isinstance(v, (string, property)) and not hasattr(v, '__call__'):
+                    raise TypeError("_template must be a string")
+                continue
             if k.startswith('_') or hasattr(v, '__call__'):
                 continue
-            if not issubclass(v['field_cls'], basefield):
+            if not isinstance(v, dict) or not issubclass(v['field_cls'], basefield):
                 raise TypeError('Field type must be a subclass of basefield')
             if not all(isinstance(i, (type,
                                       str,
@@ -41,7 +52,22 @@ else:
     TempNode = object
 
 
-### Consider DebugNode and OptNode and switch which one is used
+def stringify(node):
+    if isinstance(node, string):
+        return string(node)
+    return node.__repr__()
+
+def gettemplate(node, name=None):
+    template = None
+    name = "_template_%s" % name if name else "_template"
+    if hasattr(node, name):
+        template = getattr(node, name)
+    if hasattr(template, '__call__'):
+        template = template()
+    elif hasattr(node, '_%s' % name):
+        template = getattr(node, '_%s' % name)
+    return template
+
 class Node(TempNode):
     """Basic AST Node
 
@@ -89,8 +115,10 @@ class Node(TempNode):
             return getattr(self, key)
         raise KeyError(key)
 
-    def __repr__(self):
-        if hasattr(self, '_template'):
+    def __repr__(self, serializer=None):
+        print('beg repr on %s' % type(self))
+        template = gettemplate(self)
+        if template:
             fields = {}
             for i in self._fields:
                 field = getattr(self, i)
@@ -98,23 +126,24 @@ class Node(TempNode):
                     if hasattr(self, '_template_%s' % i):
                         list_template = getattr(self, '_template_%s' % i)
                         fields[i] = ''.join(['%s%s' % x for x in zip_longest(
-                                                        map(unicode, field),
+                                                        map(stringify, field),
                                                         list_template,
                                                         fillvalue=''
                                                         )])
                     else:
-                        fields[i] = ', '.join(map(unicode, field))
+                        fields[i] = ', '.join(map(stringify, field))
                 else:
                     if field is None:
                         fields[i] = ''
                     else:
-                        fields[i] = unicode(field)
-            return self._template % fields
-        if hasattr(self, '_serializer'):
-            serializer = getattr(self, '_serializer')
-            return serializer.dump(self)
-        if len(self._fields) == 1:
-            return unicode(getattr(self, self._fields[0]))
+                        fields[i] = stringify(field)
+            print('end repr on %s' % type(self))
+            return template % fields
+        #if serializer:
+        #    return serializer.dump(self)
+        #if len(self._fields) == 1:
+        #    return getattr(self, self._fields[0]).__repr__()
+        print('end repr on %s' % type(self))
         return object.__repr__(self)
 
     def __debug__setattr__(self, name, val):
