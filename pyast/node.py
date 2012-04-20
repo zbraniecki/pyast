@@ -4,9 +4,12 @@ import re
 if sys.version >= '3':
     from itertools import zip_longest
     string = str
+    strtype = str
 else:
     from itertools import izip_longest as zip_longest
-    string = basestring
+    string = unicode
+    strtype = basestring
+
 
 from .field import basefield
 
@@ -24,7 +27,7 @@ class NodeBase(type):
                 guards.update(base._guards)
         for k, v in attrs.items():
             if k == '_template':
-                if not isinstance(v, (string, property)) and not hasattr(v, '__call__'):
+                if not isinstance(v, (strtype, property)) and not hasattr(v, '__call__'):
                     raise TypeError("_template must be a string")
                 continue
             if k.startswith('_') or hasattr(v, '__call__'):
@@ -52,7 +55,7 @@ else:
 
 
 def stringify(node):
-    if isinstance(node, string):
+    if isinstance(node, strtype):
         return string(node)
     return node.__repr__()
 
@@ -149,8 +152,8 @@ class Node(TempNode):
                     else:
                         fields[i] = stringify(field)
             return template % fields
-        #if len(self._fields) == 1:
-        #    return getattr(self, self._fields[0]).__repr__()
+        if len(self._fields) == 1:
+            return getattr(self, self._fields[0]).__repr__()
         return object.__repr__(self)
 
     def __debug__setattr__(self, name, val):
