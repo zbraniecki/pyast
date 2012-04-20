@@ -265,7 +265,7 @@ class BaseASTTestCase(unittest.TestCase):
 
         e = Example(key=key, value=value)
         e._template = '< %(key)s   [ %(value)s ]>'
-        e._template_value = ['  ,   ']
+        e._template_value = ['', '  ,   ']
         x = str(e)
         self.assertEqual(x, '< key   [ a  ,   b ]>')
 
