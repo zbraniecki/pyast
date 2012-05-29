@@ -1,5 +1,6 @@
 import sys
 import re
+import copy
 
 if sys.version >= '3':
     from itertools import zip_longest
@@ -110,7 +111,7 @@ class Node(TempNode):
                 except IndexError:
                     val = self._guards[name]['default']
                     if hasattr(val, '__iter__'):
-                        val = val[:]
+                        val = copy.copy(val)
             if self._debug:
                 guards = self._guards
                 val = guards[name]['field_cls'].init(name,

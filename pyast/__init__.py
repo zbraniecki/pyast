@@ -1,4 +1,4 @@
-from .field import field, seq, re
+from .field import field, seq, dict, re
 from .node import Node
 
 def _dump_node(node, name=None, indent=0):

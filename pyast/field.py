@@ -1,6 +1,7 @@
 import sys
 import re as regexp
 from .typedlist import TypedList
+from .typeddict import TypedDict
 
 # Temporary solution for string/unicode in py2 vs py3
 if sys.version >= '3':
@@ -45,6 +46,8 @@ class basefield(object):
     }
 
     def __new__(cls, types, null=False, default=None):
+        if default is None:
+            default = cls.get_default()
         basefield._counter += 1
         if isinstance(types, (type, basestring, regexp._pattern_type)):
             types = (types,)
@@ -57,8 +60,7 @@ class basefield(object):
                 'guard_type': guard_type,
                 'field_cls': cls,
                 'null': null,
-                'default': [] if (default is None and
-                                       issubclass(cls, seq)) else default,
+                'default': default,
                 '_counter': basefield._counter}
 
 class field(basefield):
@@ -72,6 +74,11 @@ class field(basefield):
         computed = ast.field(bool, default=True)
 
     """
+
+    @staticmethod
+    def get_default():
+        return None
+
     @classmethod
     def init(cls, name, val, guard):
         cls._validate_set(name, val, guard)
@@ -117,6 +124,10 @@ class seq(basefield):
 
     """
 
+    @staticmethod
+    def get_default():
+        return []
+
     @classmethod
     def init(cls, name, val, guard):
         try:
@@ -137,4 +148,46 @@ class seq(basefield):
                 raise TypeError('Element must be one of %r' % guard['types'])
         else:
             raise TypeError('Element must be a sequence')
+
+class dict(basefield):
+    """Node field dictionary
+
+    example:
+
+    class Foo(ast.Node)
+        id = ast.dict(Identifier)
+        prefix = ast.dict((Prefix, Literal), null=True)
+        computed = ast.dict(bool, default=True)
+
+
+    """
+
+    @staticmethod
+    def get_default():
+        return {}
+    
+    @classmethod
+    def init(cls, name, val, guard):
+        return TypedDict(guard['types'],
+                         init=val,
+                         null=guard['null'])
+        try:
+            return TypedDict(guard['types'],
+                             init=val,
+                             null=guard['null'])
+        except TypeError as e:
+            raise TypeError('Error in field "%s":\n %s' % (
+                name,
+                str(e)))
+
+    @classmethod
+    def _validate_set(cls, name, val, guard):
+        if val is None and guard['null'] is True:
+            return
+        if hasattr(val, '__iter__'):
+            if not all(isinstance(i, guard['types']) for i in val):
+                raise TypeError('Element must be one of %r' % guard['types'])
+        else:
+            raise TypeError('Element must be a sequence')
+
 
