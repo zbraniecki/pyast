@@ -7,7 +7,7 @@ from pyast.typedlist import TypedList
 
 class BaseTypedListTestCase(unittest.TestCase):
     def test_basic(self):
-        a = TypedList((str,), null=True)
+        a = TypedList(types=(str,), null=True)
 
         a.append("foo")
         self.assertRaises(TypeError, a.append, 2)
@@ -31,8 +31,7 @@ class BaseTypedListTestCase(unittest.TestCase):
     def test_not_null(self):
         self.assertRaises(TypeError, TypedList, (str,))
 
-        a = TypedList((str,),
-                      ["Hello"])
+        a = TypedList(str, init=["Hello"])
         self.assertEquals(len(a), 1)
         self.assertEquals(a[0], "Hello")
 

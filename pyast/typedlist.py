@@ -7,7 +7,7 @@ if sys.version >= '3':
 
 
 class TypedList(list):
-    """Strongly types list
+    """Strongly typed list
 
     All elements of the list must be one of the given types.
 
@@ -31,11 +31,13 @@ class TypedList(list):
         super(TypedList, self).__init__()
         self._types = types
         self._null = null
-        if isinstance(types[0], basestring):
+        if isinstance(types, basestring):
             self.__enforceType = self.__enforceTypeStr
-        elif isinstance(types[0], re._pattern_type):
+        elif isinstance(types, re._pattern_type):
             self.__enforceType = self.__enforceTypePattern
         else:
+            if not hasattr(types, '__iter__'):
+                types = (types,)
             self.__enforceType = self.__enforceTypeClass
         if init:
             self.extend(init)
