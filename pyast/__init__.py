@@ -1,3 +1,4 @@
+basedict = dict
 from .field import field, seq, dict, re
 from .node import Node
 
@@ -27,6 +28,9 @@ def _dump_node(node, name=None, indent=0):
         if isinstance(field, list):
             tree.append((indent, ".%s" % i))
             tree.extend(_dump_list(field, indent=indent+2))
+        elif isinstance(field, basedict):
+            tree.append((indent, ".%s" % i))
+            tree.extend(_dump_dict(field, indent=indent+2))
         else:
             tree.extend(_dump_node(field, name=i, indent=indent))
     return tree
@@ -37,6 +41,11 @@ def _dump_list(tList, indent=0):
         tree.extend(_dump_node(item, indent=indent))
     return tree
 
+def _dump_dict(tDict, indent=0):
+    tree = []
+    for k,item in tDict.items():
+        tree.extend(_dump_node(item, indent=indent))
+    return tree
 
 def dump(ast):
     tree = _dump_node(ast)
