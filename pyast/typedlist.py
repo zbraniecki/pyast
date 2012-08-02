@@ -29,38 +29,58 @@ class TypedList(list):
 
     def __init__(self, types, init=None, null=False):
         super(TypedList, self).__init__()
-        self._types = types
-        self._null = null
-        if isinstance(types, basestring):
-            self.__enforceType = self.__enforceTypeStr
-        elif isinstance(types, re._pattern_type):
-            self.__enforceType = self.__enforceTypePattern
+        if isinstance(types, basestring) or not hasattr(types, '__iter__'):
+            self._types = (types,)
         else:
-            if not hasattr(types, '__iter__'):
-                types = (types,)
-            self.__enforceType = self.__enforceTypeClass
+            self._types = types
+        tset = set([type(t) for t in self._types])
+        
+        self._null = null
+        if len(tset) == 1:
+            tset = tset.pop()
+            self.__enforceType = self.__selectEnforcementMethod(tset)
+        else:
+            self.__enforceType = self.__enforceTypeMixed
         if init:
             self.extend(init)
         elif null is False:
             raise TypeError("This list must not be empty")
 
-    def __enforceTypeStr(self, items):
-        if all(i in self._types for i in items):
+    def __selectEnforcementMethod(self, t):
+        if issubclass(t, (basestring, int)):
+            return self.__enforceTypeStrInt
+        elif t is re._pattern_type:
+            return self.__enforceTypePattern
+        elif isinstance(t, type):
+            return self.__enforceTypeClass
+
+    def __enforceTypeMixed(self, items):
+        res = []
+        for item in items:
+            et = self.__selectEnforcementMethod(type(item))
+            res.append(et((item,)))
+        if all(res):
             return
-        raise TypeError('This list accepts only strings of value: %s' %
-                        ', '.join(self._types))
+        raise TypeError('This list accepts only elements: %s' %
+                        ', '.join([str(t) for t in self._types]))
+
+    def __enforceTypeStrInt(self, items):
+        if all(i in self._types for i in items):
+            return True
+        raise TypeError('This list accepts only elements: %s' %
+                        ', '.join([str(t) for t in self._types]))
 
     def __enforceTypeClass(self, items):
         if all(isinstance(i, self._types) for i in items):
-            return
-        raise TypeError('This list accepts only elements of types: %s' %
-                        ', '.join([str(i.__name__) for i in self._types]))
+            return True
+        raise TypeError('This list accepts only elements: %s' %
+                        ', '.join([str(t) for t in self._types]))
 
     def __enforceTypePattern(self, items):
-        if all(j.match(i) for j in self._types for i in items):
-            return
-        raise TypeError('This list accepts only elements that match: %s' %
-                        ', '.join([i.pattern for i in self._types]))
+        if all(any(j.match(i) for j in self._types) for i in items):
+            return True
+        raise TypeError('This list accepts only elements: %s' %
+                        ', '.join([str(t) for t in self._types]))
 
     def append(self, item):
         self.__enforceType((item,))
@@ -74,10 +94,10 @@ class TypedList(list):
         self.__enforceType(items)
         return super(TypedList, self).extend(items)
 
-    def pop(self):
+    def pop(self, key=-1):
         if self._null is False and len(self) == 1:
             raise TypeError("This list must not be empty")
-        return super(TypedList, self).pop()
+        return super(TypedList, self).pop(key)
 
     def __delitem__(self, k):
         if self._null is False:

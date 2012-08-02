@@ -170,6 +170,63 @@ class BaseASTTestCase(unittest.TestCase):
 
         self.assertEqual(len(e.seq), 1)
         self.assertRaises(TypeError, e.seq.__delslice__, 0, 1)
+    
+    def test_dict(self):
+        class Example(ast.Node):
+            _debug = True
+            seq = ast.dict(str, null=True)
+
+        e = Example()
+        self.assertEqual(len(e.seq), 0)
+        self.assertRaises(TypeError, e.__setattr__, seq=None)
+
+        self.assertRaises(TypeError, Example, {'a':2})
+        e = Example(None)
+        e.seq = []
+        
+        e = Example({'a':'a','b':'b'})
+        self.assertEqual(len(e.seq), 2)
+        self.assertEqual(e.seq['a'], 'a')
+        
+        e.seq.pop('a')
+        e.seq.pop('b')
+        
+        self.assertEqual(len(e.seq), 0)
+
+        e.seq = {'a':'a', 'b':'b'}
+        del e.seq['a']
+        del e.seq['b']
+
+        e.seq = {'a':'a'}
+        del e.seq['a']
+
+        class Example(ast.Node):
+            seq = ast.dict(str, null=False)
+
+        self.assertRaises(TypeError, Example)
+        self.assertRaises(TypeError, Example, {'a':2})
+
+        e = Example({'a':'a', 'b':'b'})
+
+        self.assertRaises(TypeError, e.__setattr__, 'seq', None)
+        self.assertRaises(TypeError, e.__setattr__, 'seq', {})
+
+        e.seq = {'a':'a', 'b':'b', 'c':'c'}
+
+        self.assertEqual(e.seq['c'], 'c')
+
+        self.assertRaises(TypeError, e.__setattr__, 'seq', {'a': 'a',
+                                                            'b': 3,
+                                                            'c': 'c'})
+
+        e.seq = {'a':'a'}
+        self.assertRaises(TypeError, e.seq.pop, 'a')
+
+        self.assertRaises(TypeError, e.seq.__delitem__, 0)
+
+        e.seq[0] = 'd'
+
+        self.assertRaises(TypeError, e.seq.__setitem__, 0, 2)
 
     def test_pattern(self):
         class Example(ast.Node):
@@ -182,7 +239,19 @@ class BaseASTTestCase(unittest.TestCase):
         self.assertEqual(e.seq[1], 'ba')
 
         self.assertRaises(TypeError, Example, "0a")
+    
+    def test_pattern2(self):
+        class Example(ast.Node):
+            _debug = True
+            seq = ast.seq((ast.re("[a-z]{2}"), ast.re("[1-9]{1}")))
 
+        e = Example(['ab','ba'])
+        self.assertEqual(len(e.seq), 2)
+        self.assertEqual(e.seq[0], 'ab')
+        self.assertEqual(e.seq[1], 'ba')
+
+        self.assertRaises(TypeError, Example, "0a")
+    
     def test_basic_inheritance(self):
         class Example(ast.Node):
             _debug = True
@@ -245,7 +314,7 @@ class BaseASTTestCase(unittest.TestCase):
         e._template = '<%(key)s [%(value)s]>'
         x = str(e)
         self.assertEqual(x, '<key [a, b]>')
-
+    
     def test_basic_seq_custom_template(self):
 
         class Literal(ast.Node):

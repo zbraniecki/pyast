@@ -18,6 +18,13 @@ class BaseTypedDictTestCase(unittest.TestCase):
         self.assertEquals(len(a), 2)
         self.assertEquals(a['x'], "ble")
 
+    def test_str_value(self):
+        a = TypedDict(types=("ab",), null=True)
+
+        a['x'] = "ab"
+
+        self.assertRaises(TypeError, a.__setitem__, "ce", 3)
+
     def test_not_null(self):
         self.assertRaises(TypeError, TypedDict, types=(str,))
 
@@ -33,6 +40,18 @@ class BaseTypedDictTestCase(unittest.TestCase):
         self.assertEquals(len(a), 1)
 
         self.assertRaises(TypeError, a.pop) 
+
+    def test_mixed_type(self):
+        a = TypedDict(types=("ab", 2, "ba"), null=True)
+
+        a['x'] = "ab"
+        a['y'] = 2
+
+        self.assertRaises(TypeError, a.__setitem__, 3)
+        self.assertRaises(TypeError, a.__setitem__, "cd")
+
+        a['w'] = "ab"
+        a['l'] = "ba"
 
 
 if __name__ == '__main__':
