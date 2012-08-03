@@ -4,6 +4,7 @@ import pyast as ast
 
 
 class BaseASTTestCase(unittest.TestCase):
+    """
     def test_basic_init(self):
         class Example(ast.Node):
             _debug = True
@@ -337,6 +338,17 @@ class BaseASTTestCase(unittest.TestCase):
         e._template_value = ['', '  ,   ']
         x = str(e)
         self.assertEqual(x, '< key   [ a  ,   b ]>')
+    """
+    def test_overwrite_attribute(self):
+        class Example(ast.Node):
+            _debug = True
+            key = ast.field(str, null=True)
+
+        x = Example()
+        setattr(x, "key", "foo")
+        print(x.key)
+        setattr(x, "key", "lal")
+        print(x.key)
 
 if __name__ == '__main__':
     unittest.main()
