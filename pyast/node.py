@@ -119,9 +119,11 @@ class Node(TempNode):
                                                      guards[name])
                 setattr(self.__class__, '__delattr__', self.__debug__delattr__)
                 setattr(self.__class__, '__setattr__', self.__debug__setattr__)
-                self.__debug__setattr__(name, val)
+                if val is not None:
+                    self.__debug__setattr__(name, val)
             else:
-                object.__setattr__(self, name, val)
+                if val is not None:
+                    object.__setattr__(self, name, val)
 
     def __getitem__(self, key):
         if hasattr(self, key):
