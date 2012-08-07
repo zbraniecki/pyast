@@ -168,9 +168,6 @@ class dict(basefield):
     
     @classmethod
     def init(cls, name, val, guard):
-        return TypedDict(guard['types'],
-                         init=val,
-                         null=guard['null'])
         try:
             return TypedDict(guard['types'],
                              init=val,
