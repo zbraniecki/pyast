@@ -123,6 +123,13 @@ class Node(TempNode):
             else:
                 object.__setattr__(self, name, val)
 
+    def __setstate__(self, state):
+        """
+        This make deepcopy() work on Nodes as __setstate__ is called on
+        copied objects
+        """
+        self.__init__(**state)
+
     def __getitem__(self, key):
         if hasattr(self, key):
             return getattr(self, key)
@@ -174,10 +181,6 @@ class Node(TempNode):
             val = self._guards[name]['field_cls'].init(name,
                                                       val,
                                                       self._guards[name])
-        # there's a bug here when setattr is called on an object with an 
-        # attribute
-        # that has been previously defined.
-        # See l20n's js compiler and macro idrefs substitution
         object.__setattr__(self, name, val)
 
     def __debug__delattr__(self, name):
