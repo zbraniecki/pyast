@@ -1,10 +1,10 @@
 import unittest
 
 import pyast as ast
+from copy import deepcopy
 
 
 class BaseASTTestCase(unittest.TestCase):
-    """
     def test_basic_init(self):
         class Example(ast.Node):
             _debug = True
@@ -37,7 +37,16 @@ class BaseASTTestCase(unittest.TestCase):
         self.assertEqual(e.seq[0], e2.seq[0])
         self.assertEqual(e.seq[1], e2.seq[1])
         self.assertEqual(e.field, e2.field)
-
+    
+    def test_basic_null(self):
+        class Example(ast.Node):
+            _debug = False
+            field = ast.field(str, null=True)
+        
+        e = Example()
+        self.assertEqual(type(e), Example)
+        self.assertEqual(e.field, None)
+    
     def test_not_null(self):
         class Example(ast.Node):
             _debug = True
@@ -338,17 +347,28 @@ class BaseASTTestCase(unittest.TestCase):
         e._template_value = ['', '  ,   ']
         x = str(e)
         self.assertEqual(x, '< key   [ a  ,   b ]>')
-    """
+    
     def test_overwrite_attribute(self):
-        class Example(ast.Node):
+        class Expression(ast.Node):
+            _abstract = True
             _debug = True
-            key = ast.field(str, null=True)
 
-        x = Example()
-        setattr(x, "key", "foo")
-        print(x.key)
-        setattr(x, "key", "lal")
-        print(x.key)
+        class Identifier(Expression):
+            name = ast.field(str, null=True)
+
+        class BinaryExpression(Expression):
+            left = ast.field(Expression)
+        
+        val1 = Identifier('foo')
+        val2 = Identifier('foo2')
+        x = BinaryExpression(val1)
+        self.assertEqual(x.left.name, 'foo')
+        x2 = deepcopy(x)
+        self.assertEqual(x2.left.name, x.left.name)
+        self.assertRaises(TypeError, setattr, x2, 'left', 'foo')
+        x2.left = val2
+        self.assertEqual(x.left.name, 'foo')
+        self.assertEqual(x2.left.name, 'foo2')
 
 if __name__ == '__main__':
     unittest.main()
