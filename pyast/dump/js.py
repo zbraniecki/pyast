@@ -23,13 +23,13 @@ def _dump_node(node, name=None, indent=0):
         struct['type'] = _dump_node_name(node)
         for field in node._fields:
             struct[field] = _dump_node(getattr(node, field))
-    elif isinstance(node, pyast.TypedList):
+    elif isinstance(node, list):
         struct = []
         for elem in node:
             struct.append(_dump_node(elem))
-    elif isinstance(node, pyast.TypedDict):
+    elif isinstance(node, dict):
         struct = {}
-        for elem, key in node.items():
+        for key, elem in node.items():
             struct[key] =_dump_node(elem)
     return struct
 
