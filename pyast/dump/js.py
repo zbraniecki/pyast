@@ -35,6 +35,5 @@ def _dump_node(node, name=None, indent=0):
 
 def dump(ast):
     struct = _dump_node(ast)
-    print(json)
     o = json.dumps(struct, indent=2)
     return o
