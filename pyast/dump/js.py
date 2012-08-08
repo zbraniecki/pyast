@@ -13,10 +13,11 @@ def _dump_node_name(node):
     return node.__class__.__name__.lower()
 
 def _dump_node(node, name=None, indent=0):
-    if isinstance(node, basestring):
+    if node is None:
+        return None
+    if isinstance(node, (int, bool, basestring)):
         return node
-    elif isinstance(node, bool):
-        return node
+
 
     struct = OrderedDict({'type': None})
     if isinstance(node, pyast.Node):
