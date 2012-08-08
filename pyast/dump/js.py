@@ -2,11 +2,18 @@ import json
 import pyast
 from collections import OrderedDict
 
+import sys
+
+if sys.version >= '3':
+    basestring = str
+else:
+    pass 
+
 def _dump_node_name(node):
     return node.__class__.__name__.lower()
 
 def _dump_node(node, name=None, indent=0):
-    if isinstance(node, str):
+    if isinstance(node, basestring):
         return node
     elif isinstance(node, bool):
         return node
@@ -28,5 +35,6 @@ def _dump_node(node, name=None, indent=0):
 
 def dump(ast):
     struct = _dump_node(ast)
+    print(json)
     o = json.dumps(struct, indent=2)
     return o

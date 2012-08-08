@@ -1,3 +1,9 @@
+import sys
+
+if sys.version >= '3':
+    basestring = str
+else:
+    pass 
 
 def _dump_node(node, name=None, indent=0):
     tree = []
@@ -11,7 +17,7 @@ def _dump_node(node, name=None, indent=0):
         cl = node.__class__.__name__
     tree.append((indent, "%s[%s]" % (".%s" % name if name else "", cl)))
     indent += 2
-    if isinstance(node, str):
+    if isinstance(node, basestring):
         #tree.append((indent, '"%s"' % node))
         return tree
     if isinstance(node, int):
