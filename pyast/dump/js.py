@@ -15,10 +15,9 @@ def _dump_node(node, name=None, indent=0):
     if isinstance(node, (int, bool, basestring)):
         return node
 
-
     struct = OrderedDict({'type': None})
     if isinstance(node, pyast.Node):
-        struct['type'] = node
+        struct['type'] = node.__class__.__name__
         for field in node._fields:
             struct[field] = _dump_node(getattr(node, field))
     elif isinstance(node, list):
