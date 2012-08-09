@@ -9,9 +9,6 @@ if sys.version >= '3':
 else:
     pass 
 
-def _dump_node_name(node):
-    return node.__class__.__name__.lower()
-
 def _dump_node(node, name=None, indent=0):
     if node is None:
         return None
@@ -21,7 +18,7 @@ def _dump_node(node, name=None, indent=0):
 
     struct = OrderedDict({'type': None})
     if isinstance(node, pyast.Node):
-        struct['type'] = _dump_node_name(node)
+        struct['type'] = node
         for field in node._fields:
             struct[field] = _dump_node(getattr(node, field))
     elif isinstance(node, list):
