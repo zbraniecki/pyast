@@ -46,6 +46,10 @@ class TypedList(list):
         elif null is False:
             raise TypeError("This list must not be empty")
 
+    def __repr__(self):
+        return "hah"
+
+
     def __selectEnforcementMethod(self, t):
         if issubclass(t, (basestring, int)):
             return self.__enforceTypeStrInt

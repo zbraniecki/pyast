@@ -135,7 +135,21 @@ class Node(TempNode):
             return getattr(self, key)
         raise KeyError(key)
 
-    def __repr__(self, serializer=None):
+    def __repr__(self, fields=None, serializer=None):
+        if hasattr(self, '_template'):
+            if fields is None:
+                fields = {}
+                for leaf in self._fields:
+                    field = getattr(self, leaf)
+                    if isinstance(field, basestring):
+                        fields[leaf] = field
+                    else:
+                        fields[leaf] = field.__repr__()
+            return self._template % fields
+        return '<Node:%s (%s)>' % (self.__class__.__name__,
+                                   ', '.join(self._fields))
+        """
+
         template = gettemplate(self)
         if template:
             fields = {}
@@ -153,6 +167,22 @@ class Node(TempNode):
                                                         )])
                     else:
                         fields[i] = ', '.join(map(stringify, field))
+                elif isinstance(field, dict):
+                    ###
+                    #DICT FIELDS
+                    #DEFAULT TEMPLATES
+
+                    dict_template = gettemplate(self, i)
+                    if dict_template:
+                        if len(field) >= len(dict_template):
+                            dict_template += [getfillvalue(self, i)] * (len(field)-len(dict_template)+1)
+                        fields[i] = ''.join(['%s%s' % x for x in zip_longest(
+                                                        dict_template,
+                                                        map(stringify, field),
+                                                        fillvalue=''
+                                                        )])
+                    else:
+                        fields[i] = ', '.join(map(stringify, field))
                 else:
                     if field is None:
                         fields[i] = ''
@@ -162,6 +192,7 @@ class Node(TempNode):
         if len(self._fields) == 1:
             return getattr(self, self._fields[0]).__repr__()
         return object.__repr__(self)
+        """
 
     def __eq__(self, other):
         if not isinstance(other, Node):
