@@ -46,9 +46,23 @@ class TypedList(list):
         elif null is False:
             raise TypeError("This list must not be empty")
 
-    def __repr__(self):
-        return "hah"
-
+    def __repr__(self, template=None):
+        #fields = self._fields
+        #if len(field) >= len(list_template):
+        #    list_template += [getfillvalue(self, i)] * (len(field)-len(list_template)+1)
+        #    fields[i] = ''.join(['%s%s' % x for x in zip_longest(
+        #        list_template,
+        #        map(stringify, field),
+        #        fillvalue=''
+        #    )])
+        #else:
+        #    fields[i] = ', '.join(map(stringify, field))
+        #return self._template % fields
+        if template is None:
+            return list.__repr__(self)
+        else:
+            s = template()
+        return s
 
     def __selectEnforcementMethod(self, t):
         if issubclass(t, (basestring, int)):

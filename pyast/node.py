@@ -141,8 +141,14 @@ class Node(TempNode):
                 fields = {}
                 for leaf in self._fields:
                     field = getattr(self, leaf)
-                    if isinstance(field, basestring):
+                    if isinstance(field, (int, basestring)):
                         fields[leaf] = field
+                    elif isinstance(field, list):
+                        if hasattr(self, '_template_%s' % leaf):
+                            template = getattr(self, '_template_%s' % leaf)
+                        else:
+                            template = None
+                        fields[leaf] = field.__repr__(template)
                     else:
                         fields[leaf] = field.__repr__()
             return self._template % fields
