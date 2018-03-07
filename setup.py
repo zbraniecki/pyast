@@ -8,7 +8,7 @@ setup(name='pyast',
       author='Zbigniew Braniecki',
       author_email='zbigniew@braniecki.net',
       url='https://github.com/zbraniecki/pyast',
-      packages=['pyast', ],
+      packages=['pyast', 'pyast.dump'],
       license="MPL 1.1/GPL 2.0/LGPL 2.1",
       keywords = "AST, compilator, parsing, serializing"
      )
